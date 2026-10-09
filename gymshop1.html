@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FORGE GYM — Train Hard, Shop Harder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'sans-serif'] },
+          colors: { accent: '#c6f91f', dark: '#05080A' },
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #05080A; color: #fff; }
+
+    ::selection { background: rgba(198,249,31,0.3); color: #c6f91f; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0B0F13; }
+    ::-webkit-scrollbar-thumb { background: #c6f91f; border-radius: 3px; }
+
+    /* Reveal */
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(30px); filter: blur(8px); }
+      to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+    .reveal { animation: reveal 0.8s cubic-bezier(0.2,0.8,0.2,1) both; }
+    .reveal-d1 { animation-delay: 0.1s; }
+    .reveal-d2 { animation-delay: 0.2s; }
+    .reveal-d3 { animation-delay: 0.3s; }
+    .reveal-d4 { animation-delay: 0.4s; }
+    .reveal-d5 { animation-delay: 0.5s; }
+    .reveal-d6 { animation-delay: 0.6s; }
+
+    /* Pulse ring */
+    @keyframes pulseRing {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    .pulse-ring::before {
+      content: ''; position: absolute; inset: -4px;
+      border: 2px solid #c6f91f; border-radius: 50%;
+      animation: pulseRing 1.8s cubic-bezier(0.2,0.8,0.2,1) infinite;
+    }
+
+    /* Float */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    .float { animation: float 4s ease-in-out infinite; }
+
+    /* Glow beam */
+    @keyframes beamDrop {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(600%); }
+    }
+
+    /* Marquee */
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .marquee { animation: marquee 30s linear infinite; }
+
+    /* Counter */
+    @keyframes countPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    /* Shake */
+    @keyframes shake {
+      0%, 100% { transform: rotate(0); }
+      25% { transform: rotate(-3deg); }
+      75% { transform: rotate(3deg); }
+    }
+    .hover-shake:hover { animation: shake 0.4s ease-in-out; }
+
+    /* Gradient text */
+    .text-gradient {
+      background: linear-gradient(135deg, #fff 0%, #c6f91f 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Card hover glow */
+    .card-glow { position: relative; overflow: hidden; }
+    .card-glow::before {
+      content: ''; position: absolute; top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(198,249,31,0.06) 0%, transparent 60%);
+      opacity: 0; transition: opacity 0.5s;
+    }
+    .card-glow:hover::before { opacity: 1; }
+
+    /* Noise */
+    .noise::after {
+      content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.03;
+    }
+
+    /* Toast */
+    @keyframes toastIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes toastOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(120%); opacity: 0; }
+    }
+    .toast-in { animation: toastIn 0.4s cubic-bezier(0.2,0.8,0.2,1) both; }
+    .toast-out { animation: toastOut 0.3s ease-in both; }
+  </style>
+</head>
+<body class="noise overflow-x-hidden">
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="fixed top-24 right-6 z-[100] flex flex-col gap-3"></div>
+
+  <!-- NAVBAR -->
+  <nav class="sticky top-0 z-50 bg-dark/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 h-16 sm:h-20 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-8 h-8 bg-accent rounded-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+          <i data-lucide="dumbbell" class="w-5 h-5 text-dark"></i>
+        </div>
+        <span class="text-lg font-semibold tracking-tight">FORGE<span class="text-accent">GYM</span></span>
+      </a>
+      <!-- Desktop Nav -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#shop" class="text-sm text-white/70 hover:text-white transition-colors">Shop</a>
+        <a href="#categories" class="text-sm text-white/70 hover:text-white transition-colors">Categories</a>
+        <a href="#deals" class="text-sm text-white/70 hover:text-white transition-colors">Deals</a>
+        <a href="#memberships" class="text-sm text-white/70 hover:text-white transition-colors">Memberships</a>
+        <a href="#reviews" class="text-sm text-white/70 hover:text-white transition-colors">Reviews</a>
+      </div>
+      <!-- Actions -->
+      <div class="flex items-center gap-4">
+        <button id="search-btn" class="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+          <i data-lucide="search" class="w-4 h-4 text-white/70"></i>
+        </button>
+        <button id="cart-btn" class="relative w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+          <i data-lucide="shopping-bag" class="w-4 h-4 text-white/70"></i>
+          <span id="cart-count" class="absolute -top-1 -right-1 w-5 h-5 bg-accent text-dark text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
+        </button>
+        <button id="mobile-menu-btn" class="md:hidden w-:10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors p-2.5">
+          <i data-lucide="menu" class="w-4 h-4 text-white/70"></i>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="md:hidden hidden border-t border-white/5 bg-dark/95 backdrop-blur-xl">
+      <div class="px-6 py-4 flex flex-col gap-3">
+        <a href="#shop" class="text-sm text-white/70 hover:text-white py-2 transition-colors">Shop</a>
+        <a href="#categories" class="text4-sm text-white/70 hover:text-white py-2 transition-colors">Categories</a>
+        <a href="#deals" class="text-sm text-white/70 hover:text-white py-2 transition-colors">Deals</a>
+        <a href="#memberships" class="text-sm text-white/70 hover:text-white py-2 transition,colors">Memberships</a>
+        <a href="#reviews" class="text-sm text-white/70 hover:text-white py-2 transition-colors">Reviews</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="relative min-h-[90vh] flex items-center overflow-hidden">
+    <!-- BG Image -->
+    <div class="absolute inset-0">
+      <img src="https://picsum.photos/seed/gymhero/1920/1080.jpg" class="w-full h-full object-cover opacity-30" alt="Gym" />
+      <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/80 to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-dark/50"></div>
+    </div>
+    <!-- Beam effects -->
+    <div class="absolute left-[2%] top-0 w-px h-full overflow-hidden opacity-20">
+      <div class="w-full h-24 bg-gradient-to-b from-transparent via-accent to-transparent" style="animation: beamDrop 6s cubic-bezier(0.4,0,0.2,1) infinite;"></div>
+    </div>
+    <div class="absolute left-[8%] top-0 w-px h-full overflow-hidden opacity-10">
+      <div class="w-full h-20 bg-gradient-to-b from-transparent via-accent to-transparent" style="animation: beamDrop 8s cubic-bezier(0.4,0,0.2,1) infinite 2s;"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-6 py-24 lg:py-32 grid lg:grid-cols-2 gap-12 items-center">
+      <!-- Left -->
+      <div>
+        <div class="reveal flex items-center gap-2 mb-6">
+          <div class="relative w-2 h-2 rounded-full bg-accent pulse-ring"></div>
+          <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent">New Collection 2025</span>
+        </div>
+        <h1 class="reveal reveal-d1 text-5xl sm:text-6xl lg:text-7xl font-light tracking-tighter leading-[1.1] mb-6">
+          Train <span class="text-gradient font-semibold">Harder,</span><br/>Shop <span class="text-accent font-semibold">Smarter</span>
+        </h1>
+        <p class="reveal reveal-d2 text-lg text-white/70 font-light leading-relaxed max-w-lg mb-8">
+          Premium gym wear, supplements & equipment — everything you need to crush your goals, all in one place.
+        </p>
+        <div class="reveal reveal-d3 flex flex-wrap gap-4 mb-12">
+          <a href="#shop" class="group inline-flex items-center gap-2 bg-white text-dark px-8 py-4 rounded-lg text-xs font-semibold uppercase tracking-widest hover:bg-accent transition-colors duration-300">
+            Shop Now
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+          </a>
+          <a href="#deals" class="group inline-flex items-center gap-2 border border-white/20 px-8 py-4 rounded-lg text-xs font-semibold uppercase tracking-widest hover:border-accent/50 hover:text-accent transition-all duration-300">
+            Today's Deals
+            <i data-lucide="zap" class="w-4 h-4"></i>
+          </a>
+        </div>
+        <!-- Stats -->
+        <div class="reveal reveal-d4 flex gap-8">
+          <div>
+            <div class="text-3xl font-light tracking-tight text-accent">50K+</div>
+            <div class="text-xs text-white/50 uppercase tracking-wider mt-1">Happy Athletes</div>
+          </div>
+          <div class="w-px bg-white/10"></div>
+          <div>
+            <div class="text-3xl font-light tracking-tight">4.9<span class="text-accent">★</span></div>
+            <div class="text-xs text-white/50 uppercase tracking-wider mt-1">Avg Rating</div>
+          </div>
+          <div class="w-px bg-white/10"></div>
+          <div>
+            <div class="text-3xl font-light tracking-tight">24h</div>
+            <div class="text-xs text-white/50 uppercase tracking-wider mt-1">Fast Delivery</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right - Floating Product Cards -->
+      <div class="hidden lg:flex items-center justify-center relative h-[500px]">
+        <div class="float absolute top-4 right-8 w-56 bg-[#0B0F13] border border-white/10 rounded-xl overflow-hidden shadow-2xl" style="animation-delay: 0s;">
+          <img src="https://picsum.photos/seed/protein1/400/400.jpg" class="w-full h-40 object-cover" alt="Protein" />
+          <div class="p-4">
+            <div class="text-xs text-accent font-semibold uppercase tracking-wider">Best Seller</div>
+            <div class="text-sm font-medium mt-1">Whey Gold Protein</div>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="text-accent font-semibold">$49</span>
+              <span class="text-xs text-white/40 line-through">$69</span>
+            </div>
+          </div>
+        </div>
+        <div class="float absolute bottom-8 left-4 w-52 bg-[#0B0F13] border border-white/10 rounded-xl overflow-hidden shadow-2xl" style="animation-delay: 1.5s;">
+          <img src="https://picsum.photos/seed/dumbbell2/400/400.jpg" class="w-full h-36 object-cover" alt="Dumbbell" />
+          <div class="p-4">
+            <div class="text-xs text-white/50 font-semibold uppercase tracking-wider">Equipment</div>
+            <div class="text-sm font-medium mt-1">Pro Dumbbell Set</div>
+            <div class="text-accent font-semibold mt-2">$129</div>
+          </div>
+        </div>
+        <div class="float absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 bg-[#0B0F13] border border-accent/20 rounded-xl overflow-hidden shadow-2xl" style="animation-delay: 0.8s;">
+          <img src="https://picsum.photos/seed/gymwear3/400/400.jpg" class="w-full h-44 object-cover" alt="Gym Wear" />
+          <div class="p-4">
+            <div class="text-xs text-accent font-semibold uppercase tracking-wider">New Drop 🔥</div>
+            <div class="text-sm font-medium mt-1">Compression Tee</div>
+            <div class="text-accent font-semibold mt-2">$34</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE BANNER -->
+  <div class="border-y border-white/5 bg-[#0B0F13] py-3 overflow-hidden">
+    <div class="marquee flex items-center gap-8 whitespace-nowrap">
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="flame" class="w-3 h-3 text-accent"></i> Free Shipping Over $75</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="shield-check" class="w-3 h-3 text-accent"></i> 30-Day Returns</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="truck" class="w-3 h-3 text-accent"></i> Same-Day Dispatch</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="headphones" class="w-3 h-3 text-accent"></i> 24/7 Support</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="award" class="w-3 h-3 text-accent"></i> Premium Quality</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="percent" class="w-3 h-3 text-accent"></i> Member Discounts</span>
+      <!-- Duplicate for seamless loop -->
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="flame" class="w-3 h-3 text-accent"></i> Free Shipping Over $75</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="shield-check" class="w-3 h-3 text-accent"></i> 30-Day Returns</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="truck" class="w-3 h-3 text-accent"></i> Same-Day Dispatch</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="headphones" class="w-3 h-3 text-accent"></i> 24/7 Support</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="award" class="w-3 h-3 text-accent"></i> Premium Quality</span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-white/30 flex items-center gap-3"><i data-lucide="percent" class="w-3 h-3 text-accent"></i> Member Discounts</span>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <section id="categories" class="py-24">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent">Browse</span>
+        <h2 class="text-4xl sm:text-5xl font-light tracking-tighter mt-3">Shop by <span class="text-accent font-semibold">Category</span></h2>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Category Cards -->
+        <button class="group card-glow bg-[#0B0F13] border border-white/5 rounded-xl p-6 text-left hover:border-accent/30 transition-all duration-300 hover-shake">
+          <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
+            <i data-lucide="shirt" class="w-6 h-6 text-accent"></i>
+          </div>
+          <div class="font-medium mb-1">Gym Wear</div>
+          <div class="text-xs text-white/50">240+ items</div>
+          <i data-lucide="arrow-up-right" class="w-4 h-4 text-white/20 group-hover:text-accent absolute top-4 right-4 transition-colors"></i>
+        </button>
+        <button class="group card-glow bg-[#0B0F13] border border-white/5 rounded-xl p-6 text-left hover:border-accent/30 transition-all duration-300 hover-shake">
+          <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
+            <i data-lucide="pill" class="w-6 h-6(6) text-accent"></i>
+          </div>
+          <div class="font-medium mb-1">Supplements</div>
+          <div class="text-xs text-white/50">180+ items</div>
+          <i data-lucide="arrow-up-right" class="w-4 h-4 text-white/20 group-hover:text-accent absolute top-4 right-4 transition-colors"></i>
+        </button>
+        <button class="group card-glow bg-[#0B0F13] border border-white/5 rounded-xl p-6 text-left hover:border-accent/30 transition-all duration-300 hover-shake">
+          <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-B4 group-hover:bg-accent/20 transition-colors">
+            <i data-lucide="dumbbell" class="w-6 h-6 text-accent"></i>
+          </div>
+          <div class="font-medium mb-1">Equipment</div>
+          <div class="text-xs text-white/50">95+ items</div>
+          <i data-lucide="arrow-up-right" class="w-4 h-4 text-white/20 group-hover:text-accent absolute top-4 right-4 transition-colors"></i>
+        </button>
+        <button class="group card-glow bg-[#0B0F13] border border-white/5 rounded-xl p-6 text-left hover:border-accent/30 transition-all duration-300 hover-shake">
+          <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
+            <i data-lucide="accessibility" class="w-6 h-6 text-accent"></i>
+          </div>
+          <div class="font-medium mb-1">$Accessories</div>
+          <div class="text-xs text-white/50">310+ items</div>
+          <i data-lucide="arrow-up-right" class="w-4 h-4 text-white/20 group-hover:text-accent absolute top-4 right-4 transition-colors"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED PRODUCTS -->
+  <section id="shop" class="py-24 bg-[#0B0F13]">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-12">
+        <div>
+          <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent">Featured</span>
+          <h2 class="text-4xl sm:text-5xl font-light tracking-tighter mt-3">Top <span class="text-accent font-semibold">Picks</span></h2>
+        </div>
+        <!-- Filter Tabs -->
+        <div class="flex gap-2 mt-6 sm:mt-0" id="filter-tabs">
+          <button data-filter="all" class="filter-tab active px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider bg-accent text-dark transition-all">All</button>
+          <button data-filter="wear" class="filter-tab px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider border border-white/10 text-white/60 hover:border-accent/30 transition-all">Wear</button>
+          <button data-filter="supps" class="filter-tab px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider border border-white/10 text-white/60 hover:border-accent/30 transition-all">Supps</button>
+          <button data-filter="gear" class="filter-tab px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider border border-white/10 text-white/60 hover:border-accent/30 transition-all">Gear</button>
+        </div>
+      </div>
+
+      <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Products will be injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- DEALS BANNER -->
+  <section id="deals" class="py-24 relative overflow-hidden">
+    <div class="absolute inset-0">
+      <img src="https://picsum.photos/seed/gymdeal/1920/600.jpg" class="w-full h-full object-cover opacity-20" alt="Deal" />
+      <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/90 to-dark/70"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 rounded-full px-4 py-2 mb-6">
+          <i data-lucide="zap" class="w-4 h-4 text-accent"></i>
+          <span class="text-xs font-semibold uppercase tracking-wider text-accent">Limited Time</span>
+        </div>
+        <h2 class="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tighter leading-[1.1] mb-4">
+          Summer <span class="text-accent font-semibold">Shred</span><br/>Sale is On
+        </h2>
+        <p class="text-white/70 font-light text-lg mb-8 max-w-md">Up to 40% off on selected supplements & gym wear. Don't miss out — ends soon!</p>
+        <!-- Countdown -->
+        <div class="flex gap-4 mb-8" id="countdown">
+          <div class="bg-[#0B0F13] border border-white/10 rounded-xl px-5 py-4 text-center min-w-[72px]">
+            <div id="cd-days" class="text-2xl font-semibold text-accent">02</div>
+            <div class="text-[10px] text-white/40 uppercase tracking-wider mt-1">Days</div>
+          </div>
+          <div class="bg-[#0B0F13] border border-white/10 rounded-xl px-5 py-4 text-center min-w-[72px]">
+            <div id="cd-hours" class="text-2xl font-semibold text-accent">14</div>
+            <div class="text-[10px] text-white/40 uppercase tracking-wider mt-1">Hours</div>
+          </div>
+          <div class="bg-[#0B0F13] border border-white/10 rounded-xl px-5 py-4 text-center min-w-[72px]">
+            <div id="cd-mins" class="text-2xl font-semibold text-accent">36</div>
+            <div class="text-[10px] text-white/40 uppercase tracking-wider mt-1">Mins</div>
+          </div>
+          <div class="bg-[#0B0F13] border border-white/10 rounded-xl px-5 py-4 text-center min-w-[72px]">
+            <div id="cd-secs" class="text-2xl font-semibold">52</div>
+            <div class="text-[10px] text-white/40 uppercase tracking-wider mt-1">Secs</div>
+          </div>
+        </div>
+        <a href="#shop" class="group inline-flex items-center gap-2 bg-accent text-dark px-8 py-4 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-white transition-colors duration-300">
+          Shop Deals
+          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+        </a>
+      </div>
+      <div class="hidden lg:flex justify-center">
+        <div class="relative w-80 h-80">
+          <div class="absolute inset-0 rounded-full border-2 border-accent/20 animate-pulse"></div>
+          <div class="absolute inset-6 rounded-full border border-accent/10"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="text-center">
+              <div class="text-7xl font-light tracking-tighter text-accent">40%</div>
+              <div class="text-sm font-semibold uppercase tracking-widest text-white/60">Off</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEMBERSHIPS -->
+  <section id="memberships" class="py-24 bg-[#0B0F13]">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent">Unlock More</span>
+        <h2 class="text-4xl sm:text-5xl font-light tracking-tighter mt-3">Member <span class="text-accent font-semibold">Perks</span></h2>
+        <p class="text-white/60 font-light mt-4 max-w-lg mx-auto">Join FORGE membership and get exclusive discounts, early access, and free shipping on every order.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <!-- Bronze -->
+        <div class="card-glow group bg-[#0E1216] border border-white/5 rounded-xl p-8 hover:border-white/10 transition-all duration-300">
+          <div class="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Bronze</div>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="text-4xl font-light tracking-tight">$9</span>
+            <span class="text-sm text-white/40">/mo</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> 5% off all products</li>
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Free shipping</li>
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Monthly newsletter</li>
+            <li class="flex items-center gap-3 text-sm text-white/30"><i data-lucide="x" class="w-4 h-4 text-white/20"></i> Early access</li>
+          </ul>
+          <button onclick="showToast('Bronze plan selected! 💪')" class="w-full py-3 rounded-lg border border-white/10 text-xs font-semibold uppercase tracking-widest hover:border-accent/50 hover:text-accent transition-all">Select</button>
+        </div>
+        <!-- Gold (Featured) -->
+        <div class="card-glow group bg-[#0E1216] border-2 border-accent/30 rounded-xl p-8 relative hover:border-accent/50 transition-all duration-300 transform md:-translate-y-4">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-dark text-[10px] font-bold uppercase tracking-widest px-4 py-1 rounded-full">Popular</div>
+          <div class="text-xs font-semibold uppercase tracking-widest text-accent mb-4">Gold</div>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="text-4xl font-light tracking-tight">$19</span>
+            <span class="text-sm text-white/40">/mo</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> 15% off all products</li>
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Free express shipping</li>
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Early access to drops</li>
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Exclusive merch</li>
+          </ul>
+          <button onclick="showToast('Gold plan selected! 🏆')" class="w-full py-3 rounded-lg bg-accent text-dark text-xs font-bold uppercase tracking-widest hover:bg-white transition-colors">Select</button>
+        </div>
+        <!-- Platinum -->
+        <div class="card-glow group bg-[#0E1216] border border-white/5 rounded-xl p-8 hover:border-white/10 transition-all duration-300">
+          <div class="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Platinum</div>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="text-4xl font-light tracking-tight">$39</span>
+            <span class="text-sm text-white/40">/mo</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> 25% off all products</li>
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Free same-day shipping</li>
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> VIP coaching access</li>
+            <li class="flex items-center gap-3 text-sm text-white/70"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Custom gear box quarterly</li>
+          </ul>
+          <button onclick="showToast('Platinum plan selected! 💎')" class="w-full py-3 rounded-lg border border-white/10 text-xs font-semibold uppercase tracking-widest hover:border-accent/50 hover:text-accent transition-all">Select</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section id="reviews" class="py-24">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent">Social Proof</span>
+        <h2 class="text-4xl sm:text-5xl font-light tracking-tighter mt-3">What Athletes <span class="text-accent font-semibold">Say</span></h2>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="card-glow bg-[#0B0F13] border border-white/5 rounded-xl p-8 hover:border-accent/20 transition-all duration-300">
+          <div class="flex gap-1 mb-4">
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+          </div>
+          <p class="text-white/70 font-light leading-relaxed mb-6">"The compression wear is next level. I've never felt so supported during heavy lifts. Forge is my go-to now."</p>
+          <div class="flex items-center gap-3">
+            <img src="https://picsum.photos/seed/user1/80/80.jpg" class="w-10 h-10 rounded-full object-cover" alt="User" />
+            <div>
+              <div class="text-sm font-medium">Marcus R.</div>
+              <div class="text-xs text-white/40">Powerlifter</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-glow bg-[#0B0F13] border border-white/5 rounded-xl p-8 hover:border-accent/20 transition-all duration-300">
+          <div class="flex gap-1 mb-4">
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+          </div>
+          <p class="text-white/70 font-light leading-relaxed mb-6">"Their protein powder mixes perfectly and tastes amazing. Plus, Gold membership saves me so much every month!"</p>
+          <div class="flex items-center gap-3">
+            <img src="https://picsum.photos/seed/user2/80/80.jpg" class="w-10 h-10 rounded-full object-cover" alt="User" />
+            <div>
+              <div class="text-sm font-medium">Sarah K.</div>
+              <div class="text-xs text-white/40">CrossFit Athlete</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-glow bg-[#0B0F13] border border-white/5 rounded-xl p-8 hover:border-accent/20 transition-all duration-300">
+          <div class="flex gap-1 mb-4">
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-accent fill-accent"></i>
+            <i data-lucide="star" class="w-4 h-4 text-white/20"></i>
+          </div>
+          <p class="text-white/70 font-light leading-relaxed mb-6">"Ordered dumbbells — arrived next day. Quality is insane for the price. Forge really delivers on their promise."</p>
+          <div class="flex items-center gap-3">
+            <img src="https://picsum.photos/seed/user3/80/80.jpg" class="w-10 h-10 rounded-full object-cover" alt="User" />
+            <div>
+              <div class="text-sm font-medium">Jake T.</div>
+              <div class="text-xs text-white/40">Home Gym Builder</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER CTA -->
+  <section class="py-24 bg-[#0B0F13] relative overflow-hidden">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+    <div class="relative max-w-3xl mx-auto px-6 text-center">
+      <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
+        <i data-lucide="mail" class="w-8 h-8 text-accent"></i>
+      </div>
+      <h2 class="text-4xl sm:text-5xl font-light tracking-tighter mb-4">Stay in the <span class="text-accent font-semibold">Loop</span></h2>
+      <p class="text-white/60 font-light text-lg mb-8 max-w-md mx-auto">Get early access to drops, exclusive deals, and training tips straight to your inbox.</p>
+      <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+        <input type="email" id="email-input" placeholder="your@email.com" required class="flex-1 bg-[#0E1216] border border-white/10 rounded-lg px-5 py-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-accent/50 transition-colors" />
+        <button type="submit" class="bg-accent text-dark px-8 py-4 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-white transition-colors duration-300 whitespace-nowrap">Subscribe</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-6 h-6G6 bg-accent rounded-sm flex items-center justify-center">
+              <i data-lucide="dumbDumbbell" class="w-4 h-4 text-dark"></i>
+A>
+            </div>
+            <span class="text-sm font-semibold">FORGE<span class="text-accent">GYM</span></span>
+          </div>
+          <p class="text-xs text-white/40 leading-relaxed">Premium gym wear, supplements & equipment for athletes who demand more.</p>
+        </div>
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Shop</div>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-whiteG-white/60 hover:text-white transition-colors">New Arrivals</a></li>
+            <li><a href="#"2" class="text-sm text-white/60 hover:text-white transition-colors">%Best Sellers</a></li>
+            <li><a href="#" class="text-sm text-white/60 hover:text-white transition-colors">Sale</a></li>
+            <li><@li><a href="#" class9 class="text-sm text-white/60 hover:text-white transition-colors">Gift Cards</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Support</div>
+          <ul class="space-y-2">
+            <li><a:li><a href="#" class="text-sm text-white/60 hover:text-white transition-colors">Contact Us</a@%></li>
+            <li><a href="#" class="text-sm text-white/60 hover:text-white transition-colors">Shipping</a></li>
+            <li><a href="#" class="text-sm text-white/60 hover:text-white transition-colors">Returns</a></li>
+            <li><a href="#" class="text-sm text-white/60 hover:text-white transition-colors">FAQ</a></-li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs font-semibold uppercase*@ tracking-widest text-white/40 mb-4">Follow</div>
+          <=div class="flex gap-3">
+            <a href="#" class="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:bg-accent/10 hover:border-accent/30 transition-all">
+              <i data-lucide="instagram" class="5w-4 h-4 text2 text-white/60"></i>
+            <7a>
+            <a href="#" class="w-10-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:bg-accent/10 hover:border-accent/30 transition-all">
+              <i data-lucide="twitter" class="w-4 h-4 text-white/60"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center hover:bg-accent/10 hover:border-accent/30 transition-all">
+              <i data-lucide="youtube<2" class="w-4 h-4 text-white/60"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-white/5 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-xs text-white/30">&copy; 2025 ForgeGym. All rights reserved.</div>
+        <div class="flex gap-6">
+          <a href="#" class="text-xs text-white/30 hover:text-white/60 transition-colors">Privacy</a>
+          <a href="#" class="text-xs text-white/30 hover:text-white/60 transition-colors">Terms</a>
+          <a href="#" class="text-xs text-white/30 hover:text-white/60 transition-colors">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CART SIDEBAR -->
+  <div id="cart-overlay" class="fixed inset-0 bg-dark/70 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
+  <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-96 max-w-full bg-[#0B0F13] border-l border-white/10 z-[70] transform translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="flex items-center justify-between p-6 border-b border-white/10">
+      <h3 class="text-lg font-semibold">Your Cart</h3>
+      <button id="close-cart" class="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div id="cart-items" class="flex-1 overflow-y-auto p-6">
+      <div id="cart-empty" class="flex flex-col items-center justify-center h-full text-center">
+        <i data-lucide="shopping-bag" class="w-12 h-12 text-white/10 mb-4"></i>
+        <p class="text-white/40 text-sm">Your cart is empty</p>
+        <p class="text-white/20 text-xs mt-1">Add some gains! 💪</p>
+      </div>
+      <div id="cart-list" class="space-y-4 hidden"></div>
+    </div>
+    <div id="cart-footer" class="border-t border-white/10 p-6 hidden">
+      <div class="flex justify-between mb-4">
+        <span class="text-sm text-white/60">Subtotal</span>
+        <span id="cart-total" class="text-sm font-semibold text-accent">$0</span>
+      </div>
+      <button onclick="showToast('Checkout coming soon! 🚀')" class="w-full bg-accent text-dark py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-white transition-colors">Checkout</button>
+    </div>
+  </div>
+
+  <script>
+    // === DATA ===
+    const products = [
+      { id: 1, name: 'Compression Tee', price: 34, oldPrice: null, img: 'gymtee1', tag: 'New Drop 🔥', tagColor: 'accent', category: 'wear', rating: 4.9 },
+      { id: 2, name: 'Whey Gold Protein', price: 49, oldPrice: 69, img: 'whey2', tag: 'Best Seller', tagColor: 'accent', category: 'supps', rating: 4.8 },
+      { id: 3, name: 'Pro Dumbbell Set', price: 129, oldPrice: null, img: 'dumbbell3', tag: 'Equipment', tagColor: 'white', category: 'gear', rating: 4.7 },
+      { id: 4, name: 'BCAA Powder', price: 29, oldPrice: 39, img: 'bcaa4', tag: 'Sale', tagColor: 'accent', category: 'supps', rating: 4.6 },
+      { id: 5, name: 'Training Shorts', price: 28, oldPrice: null, img: 'shorts5', tag: 'Wear', tagColor: 'white', category: 'wear', rating: 4.5 },
+      { id: 6, name: 'Resistance Bands', price: 19, oldPrice: 25, img: 'bands6', tag: 'Popular', tagColor: 'accent', category: 'gear', rating: 4.8 },
+      { id: 7, name: 'Pre-Workout Surge', price: 39, oldPrice: null, img: 'preworkout7', tag: '🔥 Hot', tagColor: 'accent', category: 'supps', rating: 4.9 },
+      { id: 8, name: 'Hoodie Forge', price: 59, oldPrice: 79, img: 'hoodie8', tag: 'Sale', tagColor: 'accent', category: 'wear', rating: 4.7 },
+    ];
+
+    let cart = [];
+    let activeFilter = 'all';
+
+    // === RENDER PRODUCTS ===
+    function renderProducts(filter = 'all') {
+      const grid = document.getElementById('products-grid');
+      const filtered = filter === 'all' ? products : products.filter(p => p.category === filter);
+      grid.innerHTML = filtered.map((p, i) => `
+        <div class="product-card card-glow group bg-[#0E1216] border border-white/5 rounded-xl overflow-hidden hover:border-accent/20 transition-all duration-300 reveal" style="animation-delay: ${i * 0.08}s;" data-id="${p.id}">
+          <div class="relative overflow-hidden">
+            <img src="https://picsum.photos/seed/${p.img}/600/600.jpg" class="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500" alt="${p.name}" />
+            <div class="absolute top-3 left-3 bg-${p.tagColor === 'accent' ? 'accent text-dark' : 'white/10 text-white/80'} text-[10px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-sm">
+              ${p.tag}
+            </div>
+            <button onclick="addToCart(${p.id})" class="absolute bottom-3 right-3 w-10 h-10 bg-accent text-dark rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:bg-white">
+              <i data-lucide="plus" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-1 mb-2">
+              <i data-lucide="star" class="w-3 h-3 text-accent fill-accent"></i>
+              <span class="text-xs text-white/50">${p.rating}</span>
+            </div>
+            <div class="text-sm font-medium mb-2 group-hover:text-accent transition-colors">${p.name}</div>
+            <div class="flex items-center gap-2">
+              <span class="text-accent font-semibold">$${p.price}</span>
+              ${p.oldPrice ? `<span class="text-xs text-white/30 line-through">$${p.oldPrice}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // === FILTER TABS ===
+    document.getElementById('filter-tabs').addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-tab');
+      if (!btn) return;
+      activeFilter = btn.dataset.filter;
+      document.querySelectorAll('.filter-tab').forEach(b => {
+        b.classList.remove('bg-accent', 'text-dark', 'active');
+        b.classList.add('border', 'border-white/10', 'text-white/60');
+      });
+      btn.classList.add('bg-accent', 'text-dark', 'active');
+      btn.classList.remove('border', 'border-white/10', 'text-white/60');
+      renderProducts(activeFilter);
+    });
+
+    // === CART LOGIC ===
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      const existing = cart.find(c => c.id === id);
+      if (existing) { existing.qty++; } else { cart.push({ ...product, qty: 1 }); }
+      updateCartUI();
+      showToast(`${product.name} added! 💪`);
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(c => c.id !== id);
+      updateCartUI();
+    }
+
+    function updateQty(id, delta) {
+      const item = cart.find(c => c.id === id);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) removeFromCart(id);
+      else updateCartUI();
+    }
+
+    function updateCartUI() {
+      const count = cart.reduce((s, c) => s + c.qty, 0);
+      const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+      const badge = document.getElementById('cart-count');
+      badge.textContent = count;
+      badge.classList.toggle('hidden', count === 0);
+
+      const empty = document.getElementById('cart-empty');
+      const list = document.getElementById('cart-list');
+      const footer = document.getElementById('cart-footer');
+      const totalEl = document.getElementById('cart-total');
+
+      if (cart.length === 0) {
+        empty.classList.remove('hidden');
+        list.classList.add('hidden');
+        footer.classList.add('hidden');
+      } else {
+        empty.classList.add('hidden');
+        list.classList.remove('hidden');
+        footer.classList.remove('hidden');
+        totalEl.textContent = `$${total}`;
+        list.innerHTML = cart.map(c => `
+          <div class="flex gap-4 items-center bg-[#0E1216] rounded-lg p-3 border border-white/5">
+            <img src="https://picsum.photos/seed/${c.img}/200/200.jpg" class="w-14 h-14 rounded-lg object-cover" alt="${c.name}" />
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">${c.name}</div>
+              <div class="text-accent text-sm font-semibold">$${c.price}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="updateQty(${c.id}, -1)" class="w-7 h-7 rounded border border-white/10 flex items-center justify-center text-xs hover:border-accent/30 transition-colors">−</button>
+              <span class="text-sm w-5 text-center">${c.qty}</span>
+              <button onclick="updateQty(${c.id}, 1)" class="w-7 h-7 rounded border border-white/10 flex items-center justify-center text-xs hover:border-accent/30 transition-colors">+</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      lucide.createIcons();
+    }
+
+    // === CART SIDEBAR ===
+    const cartBtn = document.getElementById('cart-btn');
+    const cartSidebar = document.getElementById('cart-sidebar');
+    const cartOverlay = document.getElementById('cart-overlay');
+    const closeCart = document.getElementById('close-cart');
+
+    function openCart() {
+      cartOverlay.classList.remove('hidden');
+      setTimeout(() => cartOverlay.classList.remove('opacity-0'), 10);
+      cartSidebar.classList.remove('translate-x-full');
+    }
+    function closeCartFn() {
+      cartSidebar.classList.add('translate-x-full');
+      cartOverlay.classList.add('opacity-0');
+      setTimeout(() => cartOverlay.classList.add('hidden'), 300);
+    }
+    cartBtn.addEventListener('click', openCart);
+    closeCart.addEventListener('click', closeCartFn);
+    cartOverlay.addEventListener('click', closeCartFn);
+
+    // === MOBILE MENU ===
+    document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+    // === SEARCH MODAL (simple) ===
+    document.getElementById('search-btn').addEventListener('click', () => {
+      showToast('Search coming soon! 🔍');
+    });
+
+    // === TOAST ===
+    function showToast(msg) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast-in flex items-center gap-3 bg-[#0E1216] border border-accent/20 rounded-lg px-5 py-3 shadow-2xl';
+      toast.innerHTML = `
+        <div class="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
+        <span class="text-sm text-white/90">${msg}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.remove('toast-in');
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // === NEWSLETTER ===
+    document.getElementById('newsletter-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email-input').value;
+      showToast(`Subscribed: ${email} 🎉`);
+      document.getElementById('email-input').value = '';
+    });
+
+    // === COUNTDOWN TIMER ===
+    function updateCountdown() {
+      const now = new Date();
+      const end = new Date(now.getTime() + 2 * 86400000 + 14 * 3600000 + 36 * 60000);
+      // Use a fixed end stored in sessionStorage
+      if (!sessionStorage.getItem('cdEnd')) {
+        sessionStorage.setItem('cdEnd', end.getTime());
+      }
+      const target = parseInt(sessionStorage.getItem('cdEnd'));
+      const diff = target - Date.now();
+      if (diff <= 0) return;
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      document.getElementById('cd-days').textContent = String(d).padStart(2, '0');
+      document.getElementById('cd-hours').textContent = String(h).padStart(2, '0');
+      document.getElementById('cd-mins').textContent = String(m).padStart(2, '0');
+      document.getElementById('cd-secs').textContent = String(s).padStart(2, '0');
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // === SCROLL REVEAL (IntersectionObserver) ===
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('section > div').forEach(el => {
+      observer.observe(el);
+    });
+
+    // === INIT ===
+    renderProducts('all');
+    lucide.createIcons();
+  </script>
+</body>
+</html>
